@@ -86,9 +86,8 @@ namespace roboclaw_hardware_interface
     libroboclaw::driver *roboclaws_conn;
 
     // roboclaws and motor mappings
+    std::map<int,std::map<std::string,unsigned int>> _roboclaw_mapping;
     std::vector<std::string> _joint_names;
-    std::vector<int> _addresses;
-    std::vector<std::string> _channels;
     std::vector<std::string> _command_interfaces;
 
     // ROS control interfaces

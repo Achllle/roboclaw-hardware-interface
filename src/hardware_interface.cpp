@@ -35,22 +35,24 @@ bool RoboclawHardwareInterface::initParameters(ros::NodeHandle& nh, ros::NodeHan
 
   try {
     unsigned int index = 0;
+    _roboclaw_mapping = std::map<int, std::map<std::string, unsigned int>>();
     for (XmlRpc::XmlRpcValue::ValueStruct::const_iterator it = roboclaw_params.begin(); it != roboclaw_params.end(); ++it) {
       _joint_names[index] = it->first;
-      if (it->second.hasMember("channel")) {
-        _channels[index] = static_cast<std::string>(roboclaw_params[it->first]["channel"]);
-      }
-      else {
+      std::string channel;
+      int address;
+      if (!it->second.hasMember("channel")) {
         ROS_ERROR_STREAM("Joint " << it->first << " is missing a channel field.");
         return false;
       }
-      if (it->second.hasMember("address")) {
-        _addresses[index] = static_cast<int>(roboclaw_params[it->first]["address"]);
-      }
-      else {
+      else
+        channel = static_cast<std::string>(roboclaw_params[it->first]["channel"]);
+      if (!it->second.hasMember("address")) {
         ROS_ERROR_STREAM("Joint " << it->first << " is missing an address field.");
         return false;
       }
+      else
+        address = static_cast<int>(roboclaw_params[it->first]["address"]);
+
       if (it->second.hasMember("command_interface")) {
         _command_interfaces[index] = static_cast<std::string>(roboclaw_params[it->first]["command_interface"]);
       }
@@ -58,6 +60,9 @@ bool RoboclawHardwareInterface::initParameters(ros::NodeHandle& nh, ros::NodeHan
         ROS_ERROR_STREAM("Joint " << it->first << " is missing a command_interface field.");
         return false;
       }
+      std::map<std::string, unsigned int> vals;
+      vals.emplace(channel, index);
+      _roboclaw_mapping.emplace(address, vals);
       index++;
     }
   }
