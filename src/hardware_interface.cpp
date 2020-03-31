@@ -137,7 +137,7 @@ void RoboclawHardwareInterface::read() {
     else {
       try {
         if (interfaces.first == "velocity") {
-          readings = roboclaws_conn->get_encoders(addressPair.first);  // TODO change to get_velocity
+          readings = roboclaws_conn->get_velocity(addressPair.first);
           _joint_velocities[indices.first] = readings.first;
           _joint_velocities[indices.second] = readings.second;
         }
