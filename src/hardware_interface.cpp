@@ -35,7 +35,7 @@ bool RoboclawHardwareInterface::initParameters(ros::NodeHandle& nh, ros::NodeHan
 
   try {
     unsigned int index = 0;
-    _roboclaw_mapping = std::map<int, std::map<std::string, unsigned int>>();
+    _roboclaw_mapping = std::map<int, std::map<std::string, unsigned int>>{};
     for (XmlRpc::XmlRpcValue::ValueStruct::const_iterator it = roboclaw_params.begin(); it != roboclaw_params.end(); ++it) {
       _joint_names[index] = it->first;
       std::string channel;
@@ -115,21 +115,97 @@ bool RoboclawHardwareInterface::registerInterfaces() {
 
 
 void RoboclawHardwareInterface::read() {
+  for (auto const& addressPair : _roboclaw_mapping) {
+    std::pair<int, int> readings = std::pair<int, int>(0, 0);
+    std::pair<std::string, std::string> interfaces;
+    std::pair<unsigned int, unsigned int> indices;
+    if (addressPair.second.count("M1") == 1) {
+      unsigned int idx = addressPair.second.at("M1");
+      indices.first = idx;
+      interfaces.first = _command_interfaces[idx];
+    }
+    if (addressPair.second.count("M2") == 1) {
+      unsigned int idx = addressPair.second.at("M2");
+      indices.second = idx;
+      interfaces.second = _command_interfaces[idx];
+    }
 
+    if (interfaces.first != interfaces.second && (interfaces.first != "" || interfaces.second != "")) {
+      ROS_ERROR_STREAM_THROTTLE(2, "Received different command interfaces for roboclaw with address " <<
+                                   addressPair.first << ". Currently unsupported. Dropping command");
+    }
+    else {
+      try {
+        if (interfaces.first == "velocity") {
+          readings = roboclaws_conn->get_encoders(addressPair.first);  // TODO change to get_velocity
+          _joint_velocities[indices.first] = readings.first;
+          _joint_velocities[indices.second] = readings.second;
+        }
+        else if (interfaces.first == "duty") {
+          readings = roboclaws_conn->get_encoders(addressPair.first);  // TODO change to get_duty
+          _joint_efforts[indices.first] = readings.first;
+          _joint_efforts[indices.second] = readings.second;
+        }
+        else
+          ROS_ERROR_STREAM("Received unexpected command interface " << interfaces.first << " for address " << addressPair.first);
+      } catch(libroboclaw::crc_exception &e){
+        ROS_ERROR_STREAM("RoboClaw CRC error during getting " << interfaces.first);
+        continue;
+      } catch(timeout_exception &e){
+        ROS_ERROR_STREAM("RoboClaw timout during getting " << interfaces.first);
+        continue;
+      }
+    }
+  }
 }
 
 void RoboclawHardwareInterface::write() {
-// Since libroboclaw takes in commands for two motors at the same address, might want to use a std::map instead of std::vector
+  for (auto const& addressPair : _roboclaw_mapping) {
+    std::pair<int, int> commands;
+    std::pair<std::string, std::string> interfaces;
+    if (addressPair.second.count("M1") == 1) {
+      unsigned int idx = addressPair.second.at("M1");
+      interfaces.first = _command_interfaces[idx];
+      commands.first = _joint_commands[idx];
+    }
+    else
+      commands.first = 0;
 
-//  for (unsigned int index = 0; index < _joint_names.size(); index++) {
-//    if (_command_interfaces[index] == "velocity") {
-//      try {
-//          roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
-//      } catch(roboclaw::crc_exception &e){
-//          ROS_ERROR("RoboClaw CRC error during set velocity!");
-//      } catch(timeout_exception &e){
-//          ROS_ERROR("RoboClaw timout during set velocity!");
-//      }
-//    }
+    if (addressPair.second.count("M2") == 1) {
+      unsigned int idx = addressPair.second.at("M2");
+      interfaces.second = _command_interfaces[idx];
+      commands.second = _joint_commands[idx];
+    }
+    else
+      commands.second = 0;
+
+    if (interfaces.first != interfaces.second && (interfaces.first != "" || interfaces.second != "")) {
+      ROS_ERROR_STREAM_THROTTLE(2, "Received different command interfaces for roboclaw with address " <<
+                                   addressPair.first << ". Currently unsupported. Dropping command");
+    }
+    else {
+      if (interfaces.first == "velocity") {
+        try {
+          roboclaws_conn->set_velocity(addressPair.first, commands);
+        } catch(libroboclaw::crc_exception &e){
+          ROS_ERROR("RoboClaw CRC error during set velocity!");
+        } catch(timeout_exception &e){
+          ROS_ERROR("RoboClaw timout during set velocity!");
+        }
+      }
+      else if (interfaces.first == "effort") {
+        try {
+          roboclaws_conn->set_duty(addressPair.first, commands);
+        } catch(libroboclaw::crc_exception &e){
+          ROS_ERROR("Roboclaw CRC error during set duty!");
+        } catch(timeout_exception &e){
+          ROS_ERROR("Roboclaw timout during set duty!");
+        }
+      }
+      else {
+        ROS_ERROR_STREAM_THROTTLE(2, "Unsupported command interface " << commands.first <<
+                                     ". Options are velocity of effort");
+      }
+    }
+  }
 }
-
