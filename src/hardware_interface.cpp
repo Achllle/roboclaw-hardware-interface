@@ -3,6 +3,7 @@
 using namespace roboclaw_hardware_interface;
 
 RoboclawHardwareInterface::RoboclawHardwareInterface() {}
+RoboclawHardwareInterface::~RoboclawHardwareInterface() {}
 
 bool RoboclawHardwareInterface::init(ros::NodeHandle& nh, ros::NodeHandle& private_nh) {
 
@@ -24,6 +25,8 @@ bool RoboclawHardwareInterface::init(ros::NodeHandle& nh, ros::NodeHandle& priva
     ROS_ERROR("RoboclawHardwareInterface: failed to connect interfaces.");
     return false;
   }
+
+  return true;
 }
 
 bool RoboclawHardwareInterface::initParameters(ros::NodeHandle& nh, ros::NodeHandle& private_nh) {
@@ -76,6 +79,7 @@ bool RoboclawHardwareInterface::initParameters(ros::NodeHandle& nh, ros::NodeHan
 
 bool RoboclawHardwareInterface::initRoboclaws(std::string serial_port, int baudrate) {
   roboclaws_conn = new libroboclaw::driver(serial_port, baudrate);
+  return true;
 }
 
 bool RoboclawHardwareInterface::registerInterfaces() {
@@ -111,6 +115,8 @@ bool RoboclawHardwareInterface::registerInterfaces() {
   registerInterface(&_jnt_pos_interface);
   registerInterface(&_jnt_vel_interface);
   registerInterface(&_jnt_eff_interface);
+
+  return true;
 }
 
 
