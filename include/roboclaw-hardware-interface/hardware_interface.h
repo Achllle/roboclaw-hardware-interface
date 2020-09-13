@@ -85,8 +85,9 @@ namespace roboclaw_hardware_interface
     // serial connection to roboclaws
     libroboclaw::driver *roboclaws_conn;
 
-    // roboclaws and motor mappings
-    std::map<int,std::map<std::string,unsigned int>> _roboclaw_mapping;
+    // roboclaws and motor mappings. {address : {channel_bool : index}}
+    // e.g. {128: {0: 0, 1: 1}, 129: {0: 2}}
+    std::map<unsigned int, std::map<bool, unsigned int>> _roboclaw_mapping;
     std::vector<std::string> _joint_names;
     std::vector<std::string> _command_interfaces;
 
