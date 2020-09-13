@@ -141,11 +141,6 @@ void RoboclawHardwareInterface::read() {
           _joint_velocities[indices.first] = readings.first;
           _joint_velocities[indices.second] = readings.second;
         }
-        else if (interfaces.first == "duty") {
-          readings = roboclaws_conn->get_encoders(addressPair.first);  // TODO change to get_duty
-          _joint_efforts[indices.first] = readings.first;
-          _joint_efforts[indices.second] = readings.second;
-        }
         else
           ROS_ERROR_STREAM("Received unexpected command interface " << interfaces.first << " for address " << addressPair.first);
       } catch(libroboclaw::crc_exception &e){
@@ -193,18 +188,9 @@ void RoboclawHardwareInterface::write() {
           ROS_ERROR("RoboClaw timout during set velocity!");
         }
       }
-      else if (interfaces.first == "effort") {
-        try {
-          roboclaws_conn->set_duty(addressPair.first, commands);
-        } catch(libroboclaw::crc_exception &e){
-          ROS_ERROR("Roboclaw CRC error during set duty!");
-        } catch(timeout_exception &e){
-          ROS_ERROR("Roboclaw timout during set duty!");
-        }
-      }
       else {
         ROS_ERROR_STREAM_THROTTLE(2, "Unsupported command interface " << commands.first <<
-                                     ". Options are velocity of effort");
+                                     ". Currently only 'velocity' is supported");
       }
     }
   }
