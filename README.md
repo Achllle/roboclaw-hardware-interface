@@ -4,7 +4,11 @@ Sets up the hardware interface for up to 8 Roboclaw drivers with two channels ea
 velocity, and effort joint interface making it usable for any project that uses Roboclaw drivers in any 
 configuration. Since controllers depend on the specific configuration, they are left to the user to define or create.
 
+NOTE: under heavy development. Only velocity control is supported.
+
 ## installation & usage
+
+Connect the hardware interface to the ROS controller manager:
 
 ```c++
 main()
@@ -22,7 +26,10 @@ main()
 }
 ```
 
-### parameters
+Modify the config file according to your setup.
 
+Launch the node and config parameters:
 
-### examples
+```
+<rosparam command="load" file="$(find roboclaw-hardware-interface)/config/roboclaw_params.yaml"/>
+```
