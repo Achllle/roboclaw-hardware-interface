@@ -41,7 +41,7 @@ bool RoboclawHardwareInterface::init(ros::NodeHandle& nh, ros::NodeHandle& priva
 
 bool RoboclawHardwareInterface::initParameters(ros::NodeHandle& nh, ros::NodeHandle& private_nh) {
   XmlRpc::XmlRpcValue roboclaw_params;
-  if (!private_nh.getParam("roboclaws", roboclaw_params)) {
+  if (!private_nh.getParam("roboclaw_mapping", roboclaw_params)) {
     ROS_ERROR("Couldn't find parameter 'roboclaws' on the parameter server.");
     return false;
   }
@@ -173,10 +173,10 @@ void RoboclawHardwareInterface::read() {
       pos_readings = roboclaws_conn->get_encoders(addressPair.first);
       vel_readings = roboclaws_conn->get_velocity(addressPair.first);
     } catch(libroboclaw::crc_exception &e){
-      ROS_ERROR_STREAM("RoboClaw CRC error during getting readings for " << addressPair.first);
+      ROS_WARN_STREAM("RoboClaw CRC error during getting readings for " << addressPair.first);
       continue;
     } catch(timeout_exception &e){
-      ROS_ERROR_STREAM("RoboClaw timout during getting readings for " << addressPair.first);
+      ROS_WARN_STREAM("RoboClaw timout during getting readings for " << addressPair.first);
       continue;
     }
     // if channel exists, populate the interface
@@ -210,9 +210,9 @@ void RoboclawHardwareInterface::write() {
     try {
       roboclaws_conn->set_velocity(addressPair.first, commands);
     } catch(libroboclaw::crc_exception &e){
-      ROS_ERROR("RoboClaw CRC error during set velocity!");
+      ROS_WARN_STREAM("RoboClaw CRC error during setting values for " << addressPair.first);
     } catch(timeout_exception &e){
-      ROS_ERROR("RoboClaw timout during set velocity!");
+      ROS_WARN_STREAM("RoboClaw timout during setting values for " << addressPair.first);
     }
   }
 }
