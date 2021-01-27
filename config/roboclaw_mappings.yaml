@@ -1,0 +1,13 @@
+roboclaws:
+  joint1:
+    address: 128
+    channel: "M1"
+    command_interface: "position"
+  joint2:
+    address: 128
+    channel: "M2"
+    command_interface: "velocity"
+  joint3:
+    address: 129
+    channel: "M1"
+    command_interface: "effort"
